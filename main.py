@@ -24,3 +24,8 @@ def parse_video(video: str):
         video_id = video
     return {"video_id": video_id}
 
+
+@app.get("/comments")
+def get_comments(video_id: str):
+    # for now, just confirm we received the video_id
+    return {"video_id": video_id, "comments": []}
