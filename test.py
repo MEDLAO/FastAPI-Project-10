@@ -2,7 +2,7 @@ import requests
 import json
 
 
-API_KEY = "AIzaSyDj4AKRMC7sXCwu6oihzgUjgkM2gyRGcAQ"
+API_KEY = ""
 video_id = "xWYb7tImErI"  # sample YouTube video ID
 
 # call YouTube Data API v3 (Videos endpoint)
@@ -13,3 +13,8 @@ data = response.json()
 
 # pretty print the response
 print(json.dumps(data, indent=4))
+
+for item in data.get("items", []):
+    comment = item["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
+    author = item["snippet"]["topLevelComment"]["snippet"]["authorDisplayName"]
+    print(f"{author}: {comment}")
