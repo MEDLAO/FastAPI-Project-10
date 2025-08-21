@@ -20,5 +20,14 @@ for item in data.get("items", []):
     top_comment = snippet.get("topLevelComment", {})
     comment_snippet = top_comment.get("snippet", {})
     text = comment_snippet.get("textDisplay")
+    author = comment_snippet.get("authorDisplayName")
+    likes = comment_snippet.get("likeCount")
+    published = comment_snippet.get("publishedAt")
+    replies = snippet.get("totalReplyCount")
+
     if text:
-        print(text)
+        print(f"Author: {author}")
+        print(f"Comment: {text}")
+        print(f"Likes: {likes}, Replies: {replies}, Published: {published}")
+        print("-" * 40)
+
