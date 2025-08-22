@@ -4,12 +4,14 @@ import json
 
 API_KEY = "AIzaSyDj4AKRMC7sXCwu6oihzgUjgkM2gyRGcAQ"
 video_id = "xWYb7tImErI"  # sample YouTube video ID
+query = "nba"
+url_c = f"https://www.googleapis.com/youtube/v3/search?part=snippet&q={query}&type=video&maxResults=5&key={API_KEY}"
 
 # call YouTube Data API v3 (Videos endpoint)
 url_a = f"https://www.googleapis.com/youtube/v3/videos?part=snippet&id={video_id}&key={API_KEY}"
 url_b = f"https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId={video_id}&key={API_KEY}&order=relevance&maxResults=10"
 
-response = requests.get(url_b)
+response = requests.get(url_c)
 data = response.json()
 
 # pretty print the response
@@ -30,4 +32,11 @@ for item in data.get("items", []):
         print(f"Comment: {text}")
         print(f"Likes: {likes}, Replies: {replies}, Published: {published}")
         print("-" * 40)
+
+
+for item in data.get("items", []):
+    title = item["snippet"]["title"]
+    video_id = item["id"]["videoId"]
+    print(f"{title} -> https://www.youtube.com/watch?v={video_id}")
+
 
