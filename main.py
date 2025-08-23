@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from urllib.parse import urlparse, parse_qs
+import os
+import requests
+
 
 app = FastAPI()
 
@@ -9,23 +12,52 @@ def home():
     return {"message": "Hello, World!"}
 
 
-# endpoint to accept a YouTube URL or ID
+# endpoint to extract YouTube video ID from either a full URL or a raw ID
 @app.get("/parse/")
 def parse_video(video: str):
-    # if it's a full URL extract the video ID
+    # check if input looks like a full YouTube URL (standard or short)
     if "youtube.com" in video or "youtu.be" in video:
-        url = urlparse(video)
+        url = urlparse(video)  # parse the URL into components (hostname, path, query, etc.)
         if url.hostname == "youtu.be":
-            video_id = url.path[1:]
+            video_id = url.path[1:]  # for short links, the video ID is in the path
         else:
-            video_id = parse_qs(url.query).get("v", [None])[0]
+            video_id = parse_qs(url.query).get("v", [None])[0]  # for normal links, get ?v=ID from query params
     else:
-        # assume it's already a video ID
+        # if not a URL, assume the input is already a video ID
         video_id = video
-    return {"video_id": video_id}
+    return {"video_id": video_id}  # return the extracted or assumed video ID
 
 
 @app.get("/comments")
 def get_comments(video_id: str):
-    # for now, just confirm we received the video_id
-    return {"video_id": video_id, "comments": []}
+    # get API key from environment (set YOUTUBE_API_KEY before running)
+    api_key = os.getenv("YOUTUBE_API_KEY")
+    if not api_key:
+        return {"error": "Set YOUTUBE_API_KEY environment variable first."}
+
+    # YouTube commentThreads: newest first, 5 results
+    url = "https://www.googleapis.com/youtube/v3/commentThreads"
+    params = {
+        "part": "snippet",
+        "videoId": video_id,
+        "order": "time",      # newest first
+        "maxResults": 5,
+        "textFormat": "plainText",
+        "key": api_key,
+    }
+
+    r = requests.get(url, params=params, timeout=15)
+    data = r.json()
+
+    # extract top-level comment text safely
+    comments = []
+    for item in data.get("items", []):
+        snippet = item.get("snippet", {})
+        top = snippet.get("topLevelComment", {})
+        c = top.get("snippet", {})
+        text = c.get("textDisplay")
+        if text:
+            comments.append(text)
+
+    return {"video_id": video_id, "count": len(comments), "comments": comments}
+
