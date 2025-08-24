@@ -61,3 +61,34 @@ def get_comments(video_id: str):
 
     return {"video_id": video_id, "count": len(comments), "comments": comments}
 
+
+@app.get("/video_info")
+def video_info(video_id: str):
+    # minimal details about a video (title, channel, published, views)
+    api_key = os.getenv("YOUTUBE_API_KEY")
+    if not api_key:
+        return {"error": "Set YOUTUBE_API_KEY environment variable first."}
+
+    url = "https://www.googleapis.com/youtube/v3/videos"
+    params = {
+        "part": "snippet,statistics",
+        "id": video_id,
+        "key": api_key,
+    }
+    r = requests.get(url, params=params, timeout=15)
+    data = r.json()
+    items = data.get("items", [])
+    if not items:
+        return {"error": "Video not found or API quota issue."}
+
+    snip = items[0].get("snippet", {})
+    stats = items[0].get("statistics", {})
+    return {
+        "video_id": video_id,
+        "title": snip.get("title"),
+        "channel": snip.get("channelTitle"),
+        "publishedAt": snip.get("publishedAt"),
+        "views": int(stats.get("viewCount", 0)) if stats.get("viewCount") else None,
+        "likes": int(stats.get("likeCount", 0)) if stats.get("likeCount") else None,
+        "thumbnail": (snip.get("thumbnails", {}).get("high", {}) or snip.get("thumbnails", {}).get("default", {})).get("url"),
+    }
