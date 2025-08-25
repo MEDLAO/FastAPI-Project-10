@@ -1,7 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from urllib.parse import urlparse, parse_qs
+from dotenv import load_dotenv
 import os
 import requests
+
+load_dotenv()
 
 
 app = FastAPI()
@@ -91,4 +94,21 @@ def video_info(video_id: str):
         "views": int(stats.get("viewCount", 0)) if stats.get("viewCount") else None,
         "likes": int(stats.get("likeCount", 0)) if stats.get("likeCount") else None,
         "thumbnail": (snip.get("thumbnails", {}).get("high", {}) or snip.get("thumbnails", {}).get("default", {})).get("url"),
+    }
+
+
+@app.get("/analyze/sentiment")
+def analyze_sentiment(
+    video_id: str,
+    limit: int = Query(20, ge=1, le=200),
+    order: str = Query("time", pattern="^(time|relevance)$"),
+):
+    # step 1: stub only — no analysis yet
+    return {
+        "video_id": video_id,
+        "limit": limit,
+        "order": order,
+        "total": 0,
+        "sentiment": {"positive": 0, "neutral": 0, "negative": 0},
+        "examples": {"positive": [], "neutral": [], "negative": []},
     }
